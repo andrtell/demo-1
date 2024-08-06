@@ -173,11 +173,9 @@ class M3 {
       throw Error("Can not invert non-invertible matrix");
     }
 
-    const invDet = 1.0 / dot;
-
-    return M3.muls(
+    return M3.divs(
       M3.create(r0[X], r0[Y], r0[Z], r1[X], r1[Y], r1[Z], r2[X], r2[Y], r2[Z]),
-      invDet,
+      dot,
     );
   }
 
@@ -191,4 +189,4 @@ class M3 {
 }
 
 m1 = M3.create(1, 2, 10, 4, 5, 6, 7, 8, 9);
-console.log(M3.round(M3.mulm(m1, M3.inv(m1))));
+console.log(M3.eq(MID, M3.round(M3.mulm(m1, M3.inv(m1)))));
