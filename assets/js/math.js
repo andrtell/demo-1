@@ -2,11 +2,11 @@ const X = 0;
 const Y = 1;
 const Z = 2;
 
-const UX = [1, 0, 0];
-const UY = [0, 1, 0];
-const UZ = [0, 0, 1];
-
 class V3 {
+  static UX = [1, 0, 0];
+  static UY = [0, 1, 0];
+  static UZ = [0, 0, 1];
+
   static create(x, y, z) {
     return [x, y, z];
   }
@@ -93,9 +93,9 @@ const R0 = 0;
 const R1 = 1;
 const R2 = 2;
 
-const MID = [UX, UY, UZ];
-
 class M3 {
+  static ID = [V3.UX, V3.UY, V3.UZ];
+
   /* Components are given in row-major form */
   static create(n00, n01, n02, n10, n11, n12, n20, n21, n22) {
     /* Components are stored in column-major form */
@@ -189,4 +189,4 @@ class M3 {
 }
 
 m1 = M3.create(1, 2, 10, 4, 5, 6, 7, 8, 9);
-console.log(M3.eq(MID, M3.round(M3.mulm(m1, M3.inv(m1)))));
+console.log(M3.eq(M3.ID, M3.round(M3.mulm(m1, M3.inv(m1)))));
