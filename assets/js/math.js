@@ -3,7 +3,7 @@ class Vector3D {
   static uy = [0, 1, 0];
   static uz = [0, 0, 1];
 
-  static make(x, y, z) {
+  static from_rows(x, y, z) {
     return [x, y, z];
   }
 
@@ -72,9 +72,7 @@ class Vector3D {
 class Matrix3D {
   static id = [Vector3D.ux, Vector3D.uy, Vector3D.uz];
 
-  /* Components are given as 3 row vectors (row-major) */
-  static make(a, b, c) {
-    /* Components are stored as 3 column vectors  (column-major) */
+  static from_rows(a, b, c) {
     return [
       [a[0], b[0], c[0]],
       [a[1], b[1], c[1]],
@@ -85,23 +83,23 @@ class Matrix3D {
   static make_rotation_x(rad) {
     const c = Math.cos(rad);
     const s = Math.sin(rad);
-    return Matrix3D.make([1, 0, 0], [0, c, -s], [0, s, c]);
+    return Matrix3D.from_rows([1, 0, 0], [0, c, -s], [0, s, c]);
   }
 
   static make_rotation_y(rad) {
     const c = Math.cos(rad);
     const s = Math.sin(rad);
-    return Matrix3D.make([c, 0, s], [0, 1, 0], [-s, 0, c]);
+    return Matrix3D.from_rows([c, 0, s], [0, 1, 0], [-s, 0, c]);
   }
 
   static make_rotation_z(rad) {
     const c = Math.cos(rad);
     const s = Math.sin(rad);
-    return Matrix3D.make([c, -s, 0], [s, c, 0], [0, 1, 0]);
+    return Matrix3D.from_rows([c, -s, 0], [s, c, 0], [0, 1, 0]);
   }
 
   static clone(m) {
-    return Matrix3D.make([...m[0]], [...m[1]], [...m[2]]);
+    return Matrix3D.from_rows([...m[0]], [...m[1]], [...m[2]]);
   }
 
   static equal(a, b) {
@@ -173,11 +171,11 @@ class Matrix3D {
     const v0 = Vector3D.cross_product(m[1], m[2]);
     const v1 = Vector3D.cross_product(m[2], m[0]);
     const v2 = Vector3D.cross_product(m[0], m[1]);
-    const dot_product = Vector3D.dot_product(v2, m[2]);
-    if (dot_product == 0) {
+    const determinant = Vector3D.dot_product(v2, m[2]);
+    if (determinant == 0) {
       throw Error("Can not invert non-invertible matrix.");
     }
-    return Matrix3D.divide_scalar(Matrix3D.make(v0, v1, v2), dot_product);
+    return Matrix3D.divide_scalar(Matrix3D.from_rows(v0, v1, v2), determinant);
   }
 
   static round(m) {
@@ -185,5 +183,5 @@ class Matrix3D {
   }
 }
 
-v = Vector3D.make(1, 1, 1);
-console.log(Vector3D.normalize(v));
+v = Matrix3D.from_rows([1, 0, 0], [0, 1, 0], [0, 0, 1]);
+console.log(Matrix3D.inverse(v));
