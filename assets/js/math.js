@@ -3,77 +3,56 @@ class Vector3D {
   static uy = [0, 1, 0];
   static uz = [0, 0, 1];
 
-  static create(x, y, z) {
+  static make(x, y, z) {
     return [x, y, z];
   }
 
-  static x(v) {
-    return v[0];
-  }
-
-  static y(v) {
-    return v[1];
-  }
-
-  static z(v) {
-    return v[2];
-  }
-
   static clone(v) {
-    const { create, x, y, z } = Vector3D;
-    return create(x(v), y(v), z(v));
+    return [...v];
   }
 
   static equal(a, b) {
-    const { x, y, z } = Vector3D;
-    return x(a) == x(b) && y(a) == y(b) && z(a) == z(b);
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
   }
 
   static multiply_scalar(v, s) {
-    const { create, x, y, z } = Vector3D;
-    return create(x(v) * s, y(v) * s, z(v) * s);
+    return [v[0] * s, v[1] * s, v[2] * s];
   }
 
   static divide_scalar(v, s) {
-    return Vector3D.multiply_scalar(v, 1 / s);
+    return [v[0] / s, v[1] / s, v[2] / 2];
   }
 
   static negate(v) {
-    return Vector3D.multiply_scalar(v, -1);
+    return [-v[0], -v[1], -v[2]];
   }
 
-  static add(v1, v2) {
-    const { x, y, z, create } = Vector3D;
-    return create(x(v1) + x(v2), y(v1) + y(v2), z(v1) + z(v2));
+  static add(a, b) {
+    return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
   }
 
-  static subtract(v1, v2) {
-    const { x, y, z, create } = Vector3D;
-    return create(x(v1) - x(v2), y(v1) - y(v2), z(v1) - z(v2));
+  static subtract(a, b) {
+    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
   }
 
   static magnitude(v) {
-    const { x, y, z } = Vector3D;
-    return Math.sqrt(x(v) * x(v) + y(v) * y(v) + z(v) * z(v));
+    return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   }
 
   static normalize(v) {
-    const { divide_scalar, magnitude } = Vector3D;
-    return divide_scalar(v, magnitude(v));
+    return Vector3D.divide_scalar(v, Vector3D.magnitude(v));
   }
 
   static dot_product(a, b) {
-    const { x, y, z } = Vector3D;
-    return x(a) * x(b) + y(a) * y(b) + z(a) * z(b);
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   }
 
   static cross_product(a, b) {
-    const { create, x, y, z } = Vector3D;
-    return create(
-      y(a) * z(b) - z(a) * y(b),
-      z(a) * x(b) - x(a) * z(b),
-      x(a) * y(b) - y(a) * x(b),
-    );
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0],
+    ];
   }
 
   static project(a, b) {
@@ -82,86 +61,80 @@ class Vector3D {
   }
 
   static reject(a, b) {
-    const { subtract, project } = Vector3D;
-    return subtract(a, project(a, b));
+    return Vector3D.subtract(a, Vector3D.project(a, b));
   }
 
   static round(v) {
-    const { create, x, y, z } = Vector3D;
-    return create(Math.round(x(v)), Math.round(y(v)), Math.round(z(v)));
+    return [Math.round(v[0]), Math.round(v[1]), Math.round(v[2])];
   }
 }
 
-class Matrix3x3 {
+class Matrix3D {
   static id = [Vector3D.ux, Vector3D.uy, Vector3D.uz];
 
   /* Components are given as 3 row vectors (row-major) */
-  static create(a, b, c) {
+  static make(a, b, c) {
     /* Components are stored as 3 column vectors  (column-major) */
-    const { x, y, z } = Vector3D;
     return [
-      Vector3D.create(x(a), x(b), x(c)),
-      Vector3D.create(y(a), y(b), y(c)),
-      Vector3D.create(z(a), z(b), z(c)),
+      [a[0], b[0], c[0]],
+      [a[1], b[1], c[1]],
+      [a[2], b[2], c[2]],
     ];
   }
 
-  static a(m) {
-    return m[0];
+  static make_rotation_x(rad) {
+    const c = Math.cos(rad);
+    const s = Math.sin(rad);
+    return Matrix3D.make([1, 0, 0], [0, c, -s], [0, s, c]);
   }
 
-  static b(m) {
-    return m[1];
+  static make_rotation_y(rad) {
+    const c = Math.cos(rad);
+    const s = Math.sin(rad);
+    return Matrix3D.make([c, 0, s], [0, 1, 0], [-s, 0, c]);
   }
 
-  static c(m) {
-    return m[2];
+  static make_rotation_z(rad) {
+    const c = Math.cos(rad);
+    const s = Math.sin(rad);
+    return Matrix3D.make([c, -s, 0], [s, c, 0], [0, 1, 0]);
   }
 
-  static equal(m1, m2) {
-    const { a, b, c } = Matrix3x3;
+  static equal(a, b) {
     return (
-      Vector3D.equal(a(m1), a(m2)) &&
-      Vector3D.equal(b(m1), b(m2)) &&
-      Vector3D.equal(c(m1), c(m2))
+      Vector3D.equal(a[0], b[0]) &&
+      Vector3D.equal(a[1], b[1]) &&
+      Vector3D.equal(a[2], b[2])
     );
   }
 
   static clone(m) {
-    const { a, b, c, create } = Matrix3x3;
-    return create(
-      Vector3D.clone(a(m)),
-      Vector3D.clone(b(m)),
-      Vector3D.clone(c(m)),
-    );
+    return Matrix3D.make([...m[0]], [...m[1]], [...m[2]]);
   }
 
   static multiply_scalar(m, s) {
-    const { a, b, c, create } = Matrix3x3;
-    return create(
-      Vector3D.multiply_scalar(a(m), s),
-      Vector3D.multiply_scalar(b(m), s),
-      Vector3D.multiply_scalar(c(m), s),
-    );
+    return [
+      Vector3D.multiply_scalar(m[0], s),
+      Vector3D.multiply_scalar(m[1], s),
+      Vector3D.multiply_scalar(m[2], s),
+    ];
   }
 
   static divide_scalar(m, s) {
-    return Matrix3x3.multiply_scalar(m, 1 / s);
+    return Matrix3D.multiply_scalar(m, 1 / s);
   }
 
   static multiply_vector(m, v) {
-    const { x, y, z } = Vector3D;
-    const { a, b, c } = Matrix3x3;
     return Vector3D.add(
-      Vector3D.multiply_scalar(a(m), x(v)),
-      Vector3D.multiply_scalar(b(m), y(v)),
-      Vector3D.multiply_scalar(c(m), z(v)),
+      Vector3D.multiply_scalar(m[0], v[0]),
+      Vector3D.multiply_scalar(m[1], v[1]),
+      Vector3D.multiply_scalar(m[2], v[2]),
     );
   }
 
   static multiply_matrix(m1, m2) {
-    const { a, b, c, multiply_vector } = Matrix3x3;
-    return Matrix3x3.create(
+    const { a, b, c, multiply_vector } = Matrix3D;
+    return Matrix3D.make(
       multiply_vector(m1, a(m2)),
       multiply_vector(m1, b(m2)),
       multiply_vector(m1, c(m2)),
@@ -169,12 +142,12 @@ class Matrix3x3 {
   }
 
   static negate(m) {
-    return Matrix3x3.multiply_scalar(m, -1);
+    return Matrix3D.multiply_scalar(m, -1);
   }
 
   static add(m1, m2) {
-    const { a, b, c } = Matrix3x3;
-    return Matrix3x3.create(
+    const { a, b, c } = Matrix3D;
+    return Matrix3D.make(
       Vector3D.add(a(m1), a(m2)),
       Vector3D.add(b(m1), b(m2)),
       Vector3D.add(c(m1), c(m2)),
@@ -182,8 +155,8 @@ class Matrix3x3 {
   }
 
   static subtract(m1, m2) {
-    const { a, b, c } = Matrix3x3;
-    return Matrix3x3.create(
+    const { a, b, c } = Matrix3D;
+    return Matrix3D.make(
       Vector3D.sub(a(m1), a(m2)),
       Vector3D.sub(b(m1), b(m2)),
       Vector3D.sub(c(m1), c(m2)),
@@ -192,7 +165,7 @@ class Matrix3x3 {
 
   static determinant(m) {
     const { x, y, z } = Vector3D;
-    const { a, b, c } = Matrix3x3;
+    const { a, b, c } = Matrix3D;
     return (
       x(a(m)) * (y(b(m)) * z(c(m)) - y(c(m)) * z(b(m))) +
       x(b(m)) * (y(c(m)) * z(a(m)) - y(a(m)) * z(c(m))) +
@@ -201,7 +174,7 @@ class Matrix3x3 {
   }
 
   static inverse(m) {
-    const { a, b, c, divide_scalar, create } = Matrix3x3;
+    const { a, b, c, divide_scalar, make } = Matrix3D;
 
     const v0 = Vector3D.cross_product(b(m), c(m));
     const v1 = Vector3D.cross_product(c(m), a(m));
@@ -213,12 +186,12 @@ class Matrix3x3 {
       throw Error("Can not invert non-invertible matrix.");
     }
 
-    return divide_scalar(create(v0, v1, v2), dot_product);
+    return divide_scalar(make(v0, v1, v2), dot_product);
   }
 
   static round(m) {
-    const { a, b, c, create } = Matrix3x3;
-    return create(
+    const { a, b, c, make } = Matrix3D;
+    return make(
       Vector3D.round(a(m)),
       Vector3D.round(b(m)),
       Vector3D.round(c(m)),
@@ -226,7 +199,7 @@ class Matrix3x3 {
   }
 
   static rot_z(m, rad) {
-    r = Matrix3x3.create(
+    r = Matrix3D.make(
       Math.cos(rad),
       -Math.sin(rad),
       0,
@@ -239,7 +212,8 @@ class Matrix3x3 {
   }
 }
 
-v = Vector3D.create(1, 1, 1);
+v = Vector3D.make(1, 1, 1);
+console.log(Vector3D.clone(v));
 console.log(Vector3D.normalize(v));
-m = Matrix3x3.create(v, v, v);
-Matrix3x3.clone(m);
+m = Matrix3D.make(v, v, v);
+Matrix3D.clone(m);
