@@ -1,192 +1,234 @@
-const X = 0;
-const Y = 1;
-const Z = 2;
-
 class V3 {
-  static UX = [1, 0, 0];
-  static UY = [0, 1, 0];
-  static UZ = [0, 0, 1];
+  static ux = [1, 0, 0];
+  static uy = [0, 1, 0];
+  static uz = [0, 0, 1];
 
   static create(x, y, z) {
     return [x, y, z];
   }
 
+  static x(v) {
+    return v[0];
+  }
+
+  static y(v) {
+    return v[1];
+  }
+
+  static z(v) {
+    return v[2];
+  }
+
   static clone(v) {
-    return [v[X], v[Y], v[Z]];
+    const { create, x, y, z } = V3;
+    return create(x(v), y(v), z(v));
   }
 
-  static muls(v, s) {
-    return [v[X] * s, v[Y] * s, v[Z] * s];
+  static equal(a, b) {
+    const { x, y, z } = V3;
+    return x(a) == x(b) && y(a) == y(b) && z(a) == z(b);
   }
 
-  static divs(v, s) {
-    return V3.muls(v, 1 / s);
+  static multiply_scalar(v, s) {
+    const { create, x, y, z } = V3;
+    return create(x(v) * s, y(v) * s, z(v) * s);
   }
 
-  static neg(v) {
-    return V3.muls(v, -1);
+  static divide_scalar(v, s) {
+    return V3.multiply_scalar(v, 1 / s);
   }
 
-  static add(...vs) {
-    const v = V3.clone(vs[0]);
-    for (let i = 1; i < vs.length; i++) {
-      v[X] += vs[i][X];
-      v[Y] += vs[i][Y];
-      v[Z] += vs[i][Z];
-    }
-    return v;
+  static negate(v) {
+    return V3.multiply_scalar(v, -1);
   }
 
-  static sub(...vs) {
-    const v = V3.clone(vs[0]);
-    for (let i = 1; i < vs.length; i++) {
-      v[X] -= vs[i][X];
-      v[Y] -= vs[i][Y];
-      v[Z] -= vs[i][Z];
-    }
-    return v;
+  static add(v1, v2) {
+    const { x, y, z, create } = V3;
+    return create(x(v1) + x(v2), y(v1) + y(v2), z(v1) + z(v2));
   }
 
-  static mag(v) {
-    return Math.sqrt(v[X] * v[X] + v[Y] * v[Y] + v[Z] * v[Z]);
+  static subtract(v1, v2) {
+    const { x, y, z, create } = V3;
+    return create(x(v1) - x(v2), y(v1) - y(v2), z(v1) - z(v2));
   }
 
-  static norm(v) {
-    return V3.divs(v, V3.mag(v));
+  static magnitude(v) {
+    const { x, y, z } = V3;
+    return Math.sqrt(x(v) * x(v) + y(v) * y(v) + z(v) * z(v));
   }
 
-  /* dot(a, b) = mag(a) * mag(b) * cos(theta) */
-  static dot(a, b) {
-    return a[X] * b[X] + a[Y] * b[Y] + a[Z] * b[Z];
+  static normalize(v) {
+    const { divide_scalar, magnitude } = V3;
+    return divide_scalar(v, magnitude(v));
   }
 
-  static cross(a, b) {
-    return V3.create(
-      a[Y] * b[Z] - a[Z] * b[Y],
-      a[Z] * b[X] - a[X] * b[Z],
-      a[X] * b[Y] - a[Y] * b[X],
+  static dot_product(a, b) {
+    const { x, y, z } = V3;
+    return x(a) * x(b) + y(a) * y(b) + z(a) * z(b);
+  }
+
+  static cross_product(a, b) {
+    const { create, x, y, z } = V3;
+    return create(
+      y(a) * z(b) - z(a) * y(b),
+      z(a) * x(b) - x(a) * z(b),
+      x(a) * y(b) - y(a) * x(b),
     );
   }
 
   static project(a, b) {
-    return V3.muls(b, V3.dot(a, b) / V3.dot(b, b));
+    const { multiply_scalar, dot_product } = V3;
+    return multiply_scalar(b, dot_product(a, b) / dot_product(b, b));
   }
 
   static reject(a, b) {
-    return V3.sub(a, V3.project(a, b));
+    const { subtract, project } = V3;
+    return subtract(a, project(a, b));
   }
 
   static round(v) {
-    return V3.create(Math.round(v[X]), Math.round(v[Y]), Math.round(v[Z]));
-  }
-
-  static eq(a, b) {
-    return a[X] == b[X] && a[Y] == b[Y] && a[Z] == b[Z];
+    const { create, x, y, z } = V3;
+    return create(Math.round(x(v)), Math.round(y(v)), Math.round(z(v)));
   }
 }
-
-const C0 = 0;
-const C1 = 1;
-const C2 = 2;
-
-const R0 = 0;
-const R1 = 1;
-const R2 = 2;
-
 class M3 {
-  static ID = [V3.UX, V3.UY, V3.UZ];
+  static id = [V3.ux, V3.uy, V3.uz];
 
-  /* Components are given in row-major form */
-  static create(n00, n01, n02, n10, n11, n12, n20, n21, n22) {
-    /* Components are stored in column-major form */
+  /* Components are given as 3 row vectors (row-major) */
+  static create(a, b, c) {
+    /* Components are stored as 3 column vectors  (column-major) */
+    const { x, y, z } = V3;
     return [
-      V3.create(n00, n10, n20),
-      V3.create(n01, n11, n21),
-      V3.create(n02, n12, n22),
+      V3.create(x(a), x(b), x(c)),
+      V3.create(y(a), y(b), y(c)),
+      V3.create(z(a), z(b), z(c)),
     ];
   }
 
-  static clone(m) {
-    return [V3.clone(m[0]), V3.clone(m[1]), V3.clone(m[2])];
+  static a(m) {
+    return m[0];
   }
 
-  static muls(m, s) {
-    return [V3.muls(m[C0], s), V3.muls(m[C1], s), V3.muls(m[C2], s)];
+  static b(m) {
+    return m[1];
   }
 
-  static mulv(m, v) {
-    return V3.add(
-      V3.muls(m[C0], v[X]),
-      V3.muls(m[C1], v[Y]),
-      V3.muls(m[C2], v[Z]),
-    );
+  static c(m) {
+    return m[2];
   }
 
-  static mulm(a, b) {
-    return [M3.mulv(a, b[C0]), M3.mulv(a, b[C1]), M3.mulv(a, b[C2])];
-  }
-
-  static divs(m, s) {
-    return M3.muls(m, 1 / s);
-  }
-
-  static neg(m) {
-    return M3.muls(m, -1);
-  }
-
-  static add(...ms) {
-    const m = M3.clone(ms[0]);
-    for (let i = 1; i < ms.length; i++) {
-      m[C0] = V3.add(m[C0], ms[i][C0]);
-      m[C1] = V3.add(m[C1], ms[i][C1]);
-      m[C2] = V3.add(m[C2], ms[i][C2]);
-    }
-    return m;
-  }
-
-  static sub(...ms) {
-    const m = M3.clone(ms[0]);
-    for (let i = 1; i < ms.length; i++) {
-      m[C0] = V3.sub(m[C0], ms[i][C0]);
-      m[C1] = V3.sub(m[C1], ms[i][C1]);
-      m[C2] = V3.sub(m[C2], ms[i][C2]);
-    }
-    return m;
-  }
-
-  static det(m) {
+  static equal(m1, m2) {
+    const { a, b, c } = M3;
     return (
-      m[C0][R0] * (m[C1][R1] * m[C2][R2] - m[C2][R1] * m[C1][R2]) +
-      m[C1][R0] * (m[C2][R1] * m[C0][R2] - m[C0][R1] * m[C2][R2]) +
-      m[C2][R0] * (m[C0][R1] * m[C1][R2] - m[C1][R1] * m[C0][R2])
+      V3.equal(a(m1), a(m2)) && V3.equal(b(m1), b(m2)) && V3.equal(c(m1), c(m2))
     );
   }
 
-  static inv(m) {
-    const r0 = V3.cross(m[C1], m[C2]);
-    const r1 = V3.cross(m[C2], m[C0]);
-    const r2 = V3.cross(m[C0], m[C1]);
+  static clone(m) {
+    const { a, b, c, create } = M3;
+    return create(V3.clone(a(m)), V3.clone(b(m)), V3.clone(c(m)));
+  }
 
-    const dot = V3.dot(r2, m[C2]);
+  static multiply_scalar(m, s) {
+    const { a, b, c, create } = M3;
+    return create(
+      V3.multiply_scalar(a(m), s),
+      V3.multiply_scalar(b(m), s),
+      V3.multiply_scalar(c(m), s),
+    );
+  }
 
-    if (dot == 0) {
-      throw Error("Can not invert non-invertible matrix");
+  static divide_scalar(m, s) {
+    return M3.multiply_scalar(m, 1 / s);
+  }
+
+  static multiply_vector(m, v) {
+    const { x, y, z } = V3;
+    const { a, b, c } = M3;
+    return V3.add(
+      V3.multiply_scalar(a(m), x(v)),
+      V3.multiply_scalar(b(m), y(v)),
+      V3.multiply_scalar(c(m), z(v)),
+    );
+  }
+
+  static multiply_matrix(m1, m2) {
+    const { a, b, c, multiply_vector } = M3;
+    return M3.create(
+      multiply_vector(m1, a(m2)),
+      multiply_vector(m1, b(m2)),
+      multiply_vector(m1, c(m2)),
+    );
+  }
+
+  static negate(m) {
+    return M3.multiply_scalar(m, -1);
+  }
+
+  static add(m1, m2) {
+    const { a, b, c } = M3;
+    return M3.create(
+      V3.add(a(m1), a(m2)),
+      V3.add(b(m1), b(m2)),
+      V3.add(c(m1), c(m2)),
+    );
+  }
+
+  static subtract(m1, m2) {
+    const { a, b, c } = M3;
+    return M3.create(
+      V3.sub(a(m1), a(m2)),
+      V3.sub(b(m1), b(m2)),
+      V3.sub(c(m1), c(m2)),
+    );
+  }
+
+  static determinant(m) {
+    const { x, y, z } = V3;
+    const { a, b, c } = M3;
+    return (
+      x(a(m)) * (y(b(m)) * z(c(m)) - y(c(m)) * z(b(m))) +
+      x(b(m)) * (y(c(m)) * z(a(m)) - y(a(m)) * z(c(m))) +
+      x(c(m)) * (y(a(m)) * z(b(m)) - y(b(m)) * z(a(m)))
+    );
+  }
+
+  static inverse(m) {
+    const { a, b, c, divide_scalar, create } = M3;
+
+    const v0 = V3.cross_product(b(m), c(m));
+    const v1 = V3.cross_product(c(m), a(m));
+    const v2 = V3.cross_product(a(m), b(m));
+
+    const dp = V3.dot_product(v2, c(m));
+
+    if (dp == 0) {
+      throw Error("Can not invert non-invertible matrix.");
     }
 
-    return M3.divs(
-      M3.create(r0[X], r0[Y], r0[Z], r1[X], r1[Y], r1[Z], r2[X], r2[Y], r2[Z]),
-      dot,
-    );
+    return divide_scalar(create(v0, v1, v2), dp);
   }
 
   static round(m) {
-    return [V3.round(m[C0]), V3.round(m[C1]), V3.round(m[C2])];
+    const { a, b, c, create } = M3;
+    return create(V3.round(a(m)), V3.round(b(m)), V3.round(c(m)));
   }
 
-  static eq(a, b) {
-    return V3.eq(a[C0], b[C0]) && V3.eq(a[C1], b[C1]) && V3.eq(a[C2], b[C2]);
+  static rot_z(m, rad) {
+    r = M3.create(
+      Math.cos(rad),
+      -Math.sin(rad),
+      0,
+      Math.sin(rad),
+      Math.cos(rad),
+      0,
+      0,
+      1,
+    );
   }
 }
 
-m1 = M3.create(1, 2, 10, 4, 5, 6, 7, 8, 9);
-console.log(M3.eq(M3.ID, M3.round(M3.mulm(m1, M3.inv(m1)))));
+v = V3.create(1, 1, 1);
+console.log(V3.normalize(v));
+m = M3.create(v, v, v);
+M3.clone(m);
