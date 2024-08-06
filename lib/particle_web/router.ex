@@ -1,13 +1,31 @@
 defmodule ParticleWeb.Router do
   use ParticleWeb, :router
 
+  def http_headers(conn, _opts) do
+    Plug.Conn.merge_resp_headers(
+      conn,
+      # Below is the default from November 2020 but not yet in Safari as in Jan/2022.
+      # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+      [
+        {"referrer-policy", "strict-origin-when-cross-origin"},
+        {"x-content-type-options", "nosniff"},
+        # Applies only to Internet Explorer, can safely be removed in the future.
+        {"x-download-options", "noopen"},
+        # {"x-frame-options", "SAMEORIGIN"},
+        {"x-permitted-cross-domain-policies", "none"},
+        {"content-security-policy", "frame-ancestors https://tell.nu http://localhost:*;"}
+      ]
+    )
+  end
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, html: {ParticleWeb.Layouts, :root}
     plug :protect_from_forgery
-    plug :put_secure_browser_headers
+
+    plug :http_headers
   end
 
   pipeline :api do
