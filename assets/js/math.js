@@ -3,10 +3,6 @@ class Vector3D {
   static uy = [0, 1, 0];
   static uz = [0, 0, 1];
 
-  static from_rows(x, y, z) {
-    return [x, y, z];
-  }
-
   static clone(v) {
     return [...v];
   }
@@ -83,23 +79,35 @@ class Matrix3D {
   static make_rotation_x(rad) {
     const c = Math.cos(rad);
     const s = Math.sin(rad);
-    return Matrix3D.from_rows([1, 0, 0], [0, c, -s], [0, s, c]);
+    return [
+      [1, 0, 0],
+      [0, c, s],
+      [0, -s, c],
+    ];
   }
 
   static make_rotation_y(rad) {
     const c = Math.cos(rad);
     const s = Math.sin(rad);
-    return Matrix3D.from_rows([c, 0, s], [0, 1, 0], [-s, 0, c]);
+    return [
+      [c, 0, -s],
+      [0, 1, 0],
+      [s, 0, c],
+    ];
   }
 
   static make_rotation_z(rad) {
     const c = Math.cos(rad);
     const s = Math.sin(rad);
-    return Matrix3D.from_rows([c, -s, 0], [s, c, 0], [0, 1, 0]);
+    return [
+      [c, s, 0],
+      [-s, c, 0],
+      [0, 0, 1],
+    ];
   }
 
   static clone(m) {
-    return Matrix3D.from_rows([...m[0]], [...m[1]], [...m[2]]);
+    return [[...m[0]], [...m[1]], [...m[2]]];
   }
 
   static equal(a, b) {
