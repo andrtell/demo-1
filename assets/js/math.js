@@ -191,5 +191,5 @@ class Matrix3D {
   }
 }
 
-v = Matrix3D.from_rows([1, 0, 0], [0, 1, 0], [0, 0, 1]);
-console.log(Matrix3D.inverse(v));
+// v = Matrix3D.from_rows([1, 0, 0], [0, 1, 0], [0, 0, 1]);
+// console.log(Matrix3D.inverse(v));
