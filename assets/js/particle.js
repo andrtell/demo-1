@@ -5,7 +5,7 @@ class List {
     arr[j] = tmp;
   }
 
-  static sequence(upper) {
+  static integer_sequence(upper) {
     const seq = [];
     for (let i = 0; i < upper; i++) {
       seq[i] = i;
@@ -15,13 +15,27 @@ class List {
 }
 
 class Interpolation {
-  static linear(a, b, mu) {
+  static linear_1D(a, b, mu) {
     return a * (1 - mu) + b * mu;
   }
 
-  static cosine(a, b, mu) {
+  static linear_2D(a, b, c, d, x_mu, y_mu) {
+    const { linear_1D } = Interpolation;
+    y0 = linear_1D(a, b, x_mu);
+    y1 = linear_1D(c, d, x_mu);
+    return linear_1D(y0, y1, y_mu);
+  }
+
+  static cosine_1D(a, b, mu) {
     const mu2 = (1 - Math.cos(mu * Math.PI)) / 2;
     return a * (1 - mu2) + b * mu2;
+  }
+
+  static cosine_2D(a, b, c, d, x_mu, y_mu) {
+    const { cosine_1D } = Interpolation;
+    y0 = cosine_1D(a, b, x_mu);
+    y1 = cosine_1D(c, d, x_mu);
+    return cosine_1D(y0, y1, y_mu);
   }
 }
 
@@ -47,39 +61,66 @@ class Random {
     return s;
   }
 
-  static permutation_1(upper) {
-    let index = Random.shuffle_list(List.sequence(upper));
+  static permutation_1D(count) {
+    let index = Random.shuffle_list(List.integer_sequence(count));
     return (x) => {
-      return index[x % upper];
+      return index[x % count];
     };
   }
 
-  static permutation_2(upper) {
-    index = Random.shuffle_list(List.sequence(upper));
+  static permutation_2D(count) {
+    let index = Random.shuffle_list(List.integer_sequence(count));
     index = index.concat(index);
     return (x, y) => {
-      return index[index[x % upper] + (y % upper)];
+      return index[index[x % count] + (y % count)];
     };
   }
 
-  static periodic_numbers_1(count) {
+  static discrete_periodic_1D(count) {
     const ns = Random.numbers(count);
-    const p1 = Random.permutation_1(count);
+    const p1 = Random.permutation_1D(count);
     return (x) => {
       return ns[p1(x)];
     };
   }
 
-  static periodic_numbers_2(count) {
+  static discrete_periodic_2D(count) {
     const ns = Random.numbers(count);
-    const p2 = Random.permutation_2(count);
+    const p2 = Random.permutation_2D(count);
     return (x, y) => {
       return ns[p2(x, y)];
     };
   }
+
+  static continuous_periodic_1D(count) {
+    const dis = Random.discrete_periodic_1D(count);
+    return (x) => {
+      const x_ = Math.floor(x);
+      const mu = x - x_;
+      return Interpolation.linear_1D(dis(x_), dis(x_ + 1), mu);
+    };
+  }
+
+  static continuous_periodic_2D(count) {
+    const dis = Random.discrete_periodic_2D(count);
+    return (x, y) => {
+      const x_ = Math.floor(x);
+      const y_ = Math.floor(y);
+      const x_mu = x - x_;
+      const y_mu = y - y_;
+      return Interpolation.linear_2D(
+        dis(x_, y_),
+        dis(x_ + 1, y_),
+        dic(x_, y_ + 1),
+        dis(x_ + 1, y_ + 1),
+        x_mu,
+        y_mu,
+      );
+    };
+  }
 }
 
-n2 = Random.make_numbers_2(100);
+n2 = Random.continuous_periodic_1D(100);
 console.log(n2(20, 20));
 console.log(n2(21, 20));
 console.log(n2(21, 100));
@@ -130,7 +171,7 @@ class Noise {
         const mu = xs - x_;
         const s0 = samples[i][1][x_ % f];
         const s1 = samples[i][1][(x_ + 1) % f];
-        y += Interpolation.linear(s0, s1, mu) * amp;
+        y += Interpolation.linear_1D(s0, s1, mu) * amp;
         amp /= 2;
       }
       return y;
