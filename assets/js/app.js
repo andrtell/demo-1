@@ -46,4 +46,4 @@ liveSocket.connect();
 window.liveSocket = liveSocket;
 
 import "./particle.js";
-import "./math.js";
+// import "./math.js";
